@@ -6,7 +6,7 @@ pretty.install()
 
 ## Joint probabilities
 
-
+#Test
 P_A_s_B_s = 0.1
 
 print("The joint probability of both Project A and B succeed is: %.2f" 
