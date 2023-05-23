@@ -3,10 +3,10 @@ pretty.install()
 
 
 #  Initial probabilities 
-#dsa
+
 ## Joint probabilities
 
-print(" \n Part 1) Quantifying Uncertainity: \n")
+print(" \n Part 1) Quantifying Uncertainty: \n")
 
 P_A_s_B_s = 0.1
 
