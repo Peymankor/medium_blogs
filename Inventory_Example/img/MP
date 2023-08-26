@@ -1,0 +1,19 @@
+digraph {
+	node [color=lightblue2 style=filled]
+	size="10,10"
+	layout=circo
+	"(α=0, β=0)" -> "(α=0, β=2)" [label=1.0 color=red]
+	"(α=0, β=1)" -> "(α=1, β=1)" [label=0.37 color=red]
+	"(α=0, β=1)" -> "(α=0, β=1)" [label=0.63 color=red]
+	"(α=0, β=2)" -> "(α=2, β=0)" [label=0.37 color=red]
+	"(α=0, β=2)" -> "(α=1, β=0)" [label=0.37 color=red]
+	"(α=0, β=2)" -> "(α=0, β=0)" [label=0.26 color=red]
+	"(α=1, β=0)" -> "(α=1, β=1)" [label=0.37 color=red]
+	"(α=1, β=0)" -> "(α=0, β=1)" [label=0.63 color=red]
+	"(α=1, β=1)" -> "(α=2, β=0)" [label=0.37 color=red]
+	"(α=1, β=1)" -> "(α=1, β=0)" [label=0.37 color=red]
+	"(α=1, β=1)" -> "(α=0, β=0)" [label=0.26 color=red]
+	"(α=2, β=0)" -> "(α=2, β=0)" [label=0.37 color=red]
+	"(α=2, β=0)" -> "(α=1, β=0)" [label=0.37 color=red]
+	"(α=2, β=0)" -> "(α=0, β=0)" [label=0.26 color=red]
+}
