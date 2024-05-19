@@ -1,0 +1,744 @@
+---
+title: "Writing"
+format: html
+editor: visual
+---
+
+## Multi-Objective Decision Making
+
+"No man does anything from a single motive"
+
+Decision making is almost inevitable part of human life. We are always making decisions, wether we unconsciuly aware of it or not. We decide which house to buy, which car to buy, whom to marry and the list goes on. 
+
+The quality of our life (how much enjoy it) largeley depends on two factors (descions and luck). I want to first talk about luck. Because generally, you can not control luck in your life. You can be lucky to have a amazing weather in your summer vacation in Hawai, but you maybe unlucky to deal bad weather when you go ski to Austria. Luck (or bad luck) is ourt of our control. 
+
+You may argue that poissibly can can incrase her "luck surface" with some choices in her life, but again that goes to choice/decsion that can incaese you "luck surface".
+
+What we can control is our decsions. Decisions we make in life in basic terms has three elemnets:
+
+- Aletrnatives (What we can do?)
+
+- Uncertainity (What are the parameters we are not sure about it)
+
+- Values (What we want to achive)
+
+The focus of this blog is on "Values" part. 
+
+## Value Hierarchy
+
+### Values
+
+
+
+### Objectives
+
+
+### Attributes
+
+
+### Preferences
+
+
+## Simple Example of Multi-Objective Life Decions
+
+### Values:
+
+
+**List all wish list**
+
+The beginning of the multi-crtireia decision making is first to list you values **Values** here are general , high level statement that matters for the decision maker. 
+
+In the example of the job search, the following can be **Values** for the decision maker:
+
+- Be Financially Well
+- Have a Good Work-Life Balance
+- Enjoy the Work
+
+These are high level statemnet.
+
+In next steps , what you need is "Objectives".
+
+### Objectives for each Value:
+
+Objectives (sometimes called criteria) are usually verbs that describe the preffred duirection of the movemnets (maximize or minimize) of quantity that reflect the values.
+
+
+In other words, for value of "Be Financially Well" the critiria that can define it is:
+
+- Monthly Salary
+
+For the Value of "Have a Good Work-Life Balance", the following can be criteria:
+
+- Number of Vacations
+- Work from Home Option
+- Benefits
+
+For the value of "Enjoy the Work" the following can be crtiria
+
+- Professional Development
+- Supportive Manager
+
+
+![Value and Objective Images](val_obj.png)
+
+
+### Attributes 
+
+For each alternative we have, we need to give anumber of objective to distinguish alternatives from each other. Attributes 
+can have diffrente forms. For example, you give attributes using scoring or the attributes of minthly salary can be dolalr value.
+
+### Weights
+
+
+When there are at least two objectives, it is necessary to state the relative desirability between objectives. 
+For example, imagine you want to get new job. Is Being Finacially well is more important than Having good work-life balance?
+You need to trade off between objectives. 
+
+```{r}
+library(gt)
+```
+
+
+```{r}
+list_of_objectives <- c("Monthly Salary, (Scale: in $)", "Work from Home Option, (Scale: Describation)","Professional Development, (Scale 1-5)", "Number of Vacations, (Scale: Days)" , "Benefits, (Scale: Describation)", 
+                        "Supportive Manager, (Scale: Describation) ")
+
+goals <- data.frame(Objectives =list_of_objectives)
+#goals
+
+#goals |>
+#  gt() 
+gt_table <- gt(goals)
+
+
+gt_table <- 
+  gt_table |>
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green")
+
+#gt_table |>
+#  gtsave("goals.png", expand=15)
+```
+
+
+```{r}
+
+alternative_table <- matrix("NA", nrow = nrow(goals) , ncol = 5)
+colnames(alternative_table) <- c("Job A","Job B","Job C","Job D","Job E")
+
+consmatrix <- cbind(goals,alternative_table)
+#consmatrix
+
+```
+
+```{r}
+gt_matrix <- consmatrix |>
+  gt() |> 
+  tab_options(table.width = pct(100))
+
+gt_matrix <- gt_matrix |>
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green")
+
+
+gt_matrix
+```
+
+```{r}
+consmatrix$`Job A` = c(3000, 
+                       "Moderate",
+                       2,
+                       14,
+                       "Health, Retirement, Dental",
+                       "Great")
+
+
+consmatrix$`Job B` = c(3400, 
+                       "Low",
+                       5,
+                       12,
+                       "Health, Dental",
+                       "Good")
+
+consmatrix$`Job C` = c(2800, 
+                       "High",
+                       3,
+                       10,
+                       "Health",
+                       "Good")
+
+
+consmatrix$`Job D` = c(2900, 
+                       "Moderate",
+                       1,
+                       15,
+                       "Health, Retiremnet",
+                       "Great")
+
+
+
+consmatrix$`Job E` = c(3200, 
+                      "None",
+                      4, 
+                      12,
+                      "Health, Dental",
+                       "Average")
+
+
+#consmatrix
+```
+
+```{r}
+#consmatrix |>
+#  gt() |> 
+#  tab_options(table.width = pct(100))
+
+
+con_matrix <- consmatrix |>
+  gt() |> 
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green") |>
+  tab_options(table.width = pct(100))
+
+
+#con_matrix |>
+#  gtsave("con_matrix.png", expand=15)
+```
+
+
+```{r}
+con_matrix_gt <- consmatrix |>
+  gt() |> 
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green") |>
+  tab_options(table.width = pct(100)) |>
+  tab_spanner(
+    label= md("**Alternatives**"),
+    columns = 2:6)
+
+con_matrix_gt
+
+#con_matrix_gt |>
+#  gtsave("con_matrix_gt.png", expand=15)
+
+```
+
+
+```{r}
+
+workfromhome <- data.frame(Scale = c(-2, -1, 0, 1), describtion = c("None", "Low", "Moderate", "High")) 
+
+
+workfromhome |>
+  gt() |>
+  cols_label(describtion="Describtion") |>
+  tab_spanner(
+    label= md("**Defining Scale: Work From Home Option**"),
+    columns = 1:2
+  ) |>
+  tab_options(table.width = pct(50)) |>
+  opt_stylize(style = 6, color = "green") 
+  #gtsave("workfromhome_gt_gt.png", expand=15)
+   
+```
+
+```{r}
+Benefits <- data.frame(Scale = c(-1, 0, 1, 2), describtion = c("Health", 
+                                                            "Health, Dental", 
+                                                            "Health, Retirement",
+                                                            "Health, Retirement, Dental")) 
+
+Benefits |>
+  gt() |>
+  cols_label(describtion="Describtion") |>
+  tab_spanner(
+    label= md("**Defining Scale: Benefits**"),
+    columns = 1:2
+  ) |>
+  tab_options(table.width = pct(50)) |>
+  opt_stylize(style = 6, color = "green") 
+  #gtsave("benefit_gt.png", expand=15)
+
+```
+
+```{r}
+SupportiveManager	 <- data.frame(Scale = c(-1, 0, 1), describtion = c("Average", "Good", 
+                                                                "Great")) 
+
+SupportiveManager |>
+  gt() |>
+  cols_label(describtion="Describtion") |>
+  tab_spanner(
+    label= md("**Defining Scale: Supportive Manager**"),
+    columns = 1:2
+  ) |>
+  tab_options(table.width = pct(50)) |>
+  opt_stylize(style = 6, color = "green") 
+  #gtsave("supportivemanager_gt.png", expand=15)
+```
+
+```{r}
+replacement_dict <-  c("Health" = -1, 
+                       "Health, Dental" = 0, 
+                       "Health, Retiremnet" = 1,
+                       "Health, Retirement, Dental" = 2,
+                       "None" = -2 ,
+                       "Low"= -1,
+                       "Moderate" = 0,
+                       "High" = 1,
+                       "Average" = -1, 
+                       "Good" = 0, 
+                       "Great" = 1)
+
+
+```
+
+
+```{r}
+for (col_name in names(consmatrix)) {
+for (row_index in 1:nrow(consmatrix)) {
+    current_value <- consmatrix[row_index, col_name]
+    if (current_value %in% names(replacement_dict)) {
+      consmatrix[row_index, col_name] <- replacement_dict[current_value]
+    }
+  }
+}
+```
+
+
+
+
+
+```{r}
+consmatrix |>
+  gt() |> 
+  tab_options(table.width = pct(100))
+```
+
+```{r}
+consmatrix$Objectives <- c("Monthly Salary, (Scale: in $)", "Work from Home Option, (Scale: Score)", "Professional Development, (Scale: Score)", "Number of Vacations, (Scale: Days)", "Benefits, (Scale: Score)", "Supportive Manager, (Scale: Score)")
+
+con_matrix_gt <- consmatrix |>
+  gt() |> 
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green") |>
+  tab_options(table.width = pct(100)) |>
+  tab_spanner(
+    label= md("**Alternatives**"),
+    columns = 2:6)
+
+
+#con_matrix_gt |>
+#  gtsave("con_matrix_gt_score.png", expand=15)
+```
+
+```{r}
+consmatrix
+
+
+gt_matrix <- consmatrix |>
+  gt() |>
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green") |>
+  tab_spanner(
+    label= md("**Alternatives**"),
+    columns = 2:6)
+
+
+gt_matrix
+
+```
+
+```{r}
+consmatrix[,2:6]
+```
+
+
+
+
+
+```{r}
+
+library(tidyverse)
+calculate_ranked_metric <- function(consmatrix) {
+  max_values_col1 <- as.numeric(apply(consmatrix[, 2:6], 1, max))
+  min_values_col2 <- as.numeric(apply(consmatrix[, 2:6], 1, min))
+  
+  percentage_increase <- (abs((max_values_col1 - min_values_col2) / min_values_col2)) * 100
+  
+  ranked_metric <- rank(-percentage_increase, ties.method = "min")
+  
+  return(ranked_metric)
+}
+
+
+
+newcol <- calculate_ranked_metric(consmatrix = consmatrix)
+
+consmatrix$SwingMetric <- newcol
+
+consmatrix <- rename(consmatrix,c("Swing Rank"="SwingMetric"))
+
+#consmatrix
+
+con_matrix_gt_withswing <- consmatrix |>
+  gt() |> 
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green") |>
+  tab_options(table.width = pct(100)) |>
+  tab_spanner(
+    label= md("**Alternatives**"),
+    columns = 2:6) 
+  #tab_spanner(
+  #  label= md("**Rank**"),
+  #  columns = 6:7)
+
+con_matrix_gt_withswing
+# Example usage:
+#consmatrix <- matrix(data = c(21.42857, 200.00000, 200.00000, 50.00000, 300.00000, 200.00000), nrow = 1)
+#result <- calculate_ranked_metric(consmatrix)
+#print(result)
+
+```
+
+```{r}
+consmatrix$Abs.Weights <- c(50, 70,100,60, 80, 70)
+consmatrix$Norm.Weights <- consmatrix$Abs.Weights/ sum(consmatrix$Abs.Weights)
+
+consmatrix %>% 
+    gt() |> 
+  tab_options(table.width = pct(100))
+
+```
+
+
+```{r}
+con_matrix_gt_withweight <- consmatrix |>
+  gt() |> 
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green") |>
+  tab_options(table.width = pct(100)) |>
+  tab_spanner(
+    label= md("**Alternatives**"),
+    columns = 2:6) |> 
+  tab_spanner(
+    label= md("**Weight**"),
+    columns = 8:9) |>
+  fmt_number(
+    columns = Norm.Weights,
+    decimals = 2
+  )
+
+con_matrix_gt_withweight
+
+#con_matrix_gt_withweight |>
+#  gtsave("con_matrix_gt_withweight.png", expand=20)
+```
+
+```{r}
+
+scale_values_linear <- function(x, min_val, max_val) {
+  # Compute the slope and intercept of the linear transformation
+  slope <- 100 / (max_val - min_val)
+  intercept <- -min_val * slope
+  
+  # Apply the linear transformation
+  scaled_values <- slope * (x - min_val)
+  
+  # Ensure values are within the range [0, 100]
+  scaled_values <- pmin(pmax(scaled_values, 0), 100)
+  
+  return(scaled_values)
+}
+
+scale_values_exp <- function(x, a, b) {
+  # Calculate the original function values
+  y <- -exp(-a * (x - b))
+  
+  # Rescale y to be between 0 and 100
+  scaled_y <- ((y - min(y)) / (max(y) - min(y))) * 100
+  
+  return(scaled_y)
+}
+```
+
+
+
+
+```{r}
+
+x_values <- seq(2800,3400, length.out =100)
+
+
+# Define the minimum and maximum values of x
+
+min_val <-min(x_values)
+
+max_val <- max(x_values)
+
+
+# Calculate the scaled values using the function
+
+scaled_values <- scale_values_linear(x_values,min_val,max_val)
+
+
+# Plot the function
+
+plot(x_values,scaled_values,type ="l",xlab ="Monthly Salary (in $)",ylab ="Values",
+     lwd=2, main ="Converting Monthly Salary (in $) to Values (0 to 100)")
+
+#ggsave(filename = "score_to_value.png", plot = TRUE)
+```
+
+
+
+```{r}
+
+min_val <-12
+max_val <- 15
+
+x_values <- seq(min_val, max_val, 1)
+
+# Calculate the scaled values using the function
+
+scaled_values <- scale_values_exp(x_values, a=1, b = 2)
+
+scaled_values
+
+# Plot the function
+
+plot(x_values,scaled_values,type ="l",xlab ="Monthly Salary (in $)",ylab ="Values",
+     lwd=2, main ="Converting Monthly Salary (in $) to Values (0 to 100)")
+```
+
+```{r}
+
+replace_rows_with_scaled <- function(df, start_row, end_row, start_col, end_col, digits = 1, list_oflinear) {
+  
+  df_copy <- data.frame(df) 
+  
+  for (i in start_row:end_row) {
+    row_data <- as.numeric(unlist(df[i, start_col:end_col]))
+    
+    if (i %in% list_oflinear) {
+      row_scaled <- scale_values_linear(row_data, min_val = min(row_data), max_val = max(row_data))
+    } else {
+      row_scaled <- scale_values_exp(row_data, a = 1, b = 0)
+    }
+    
+    df_copy[i, start_col:end_col] <- round(row_scaled, digits = digits)
+  }
+  
+  return(df_copy)
+}
+
+```
+
+```{r}
+consmatrix_rescaled <- replace_rows_with_scaled(df=consmatrix,
+                         start_row = 1,
+                         end_row = 6,
+                         start_col = 2,
+                         end_col = 6,
+                         list_oflinear = c(1,2,3,4,5,6))
+
+
+
+consmatrix_rescaled |>
+  gt() |> 
+  tab_options(table.width = pct(100))
+```
+
+
+```{r}
+consmatrix_rescaled_gt <- consmatrix_rescaled |>
+  gt() |> 
+  tab_header(
+    title = "Objectives of Decision"
+  ) |> 
+  opt_stylize(style = 6, color = "green") |>
+  tab_options(table.width = pct(100)) |>
+  tab_spanner(
+    label= md("**Alternatives**"),
+    columns = 2:6) |> 
+  tab_spanner(
+    label= md("**Weight**"),
+    columns = 8:9) |>
+  fmt_number(
+    columns = Norm.Weights,
+    decimals = 2
+  )
+
+#consmatrix_rescaled_gt |>
+#  gtsave("con_matrix_gt_withweight_rescaled.png", expand=20)
+#consmatrix_rescaled_gt
+```
+
+```{r}
+sum(as.numeric(consmatrix_rescaled$Job.A)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.B)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.C)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.D)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.E)*as.numeric(consmatrix_rescaled$Norm.Weights))
+
+```
+
+
+
+```{r}
+consmatrix_rescaled$normalized <- round(consmatrix_rescaled$Norm.Weights/sum(consmatrix_rescaled$Norm.Weights),2)
+
+```
+
+```{r}
+consmatrix_rescaled
+```
+
+```{r}
+consmatrix_rescaled
+```
+
+
+```{r}
+Job_A_MoneyWise <- as.numeric(consmatrix_rescaled[1,]$Job.A)*as.numeric(consmatrix_rescaled[1,]$Norm.Weights)
+Job_B_MoneyWise <- as.numeric(consmatrix_rescaled[1,]$Job.B)*as.numeric(consmatrix_rescaled[1,]$Norm.Weights)
+Job_C_MoneyWise <- as.numeric(consmatrix_rescaled[1,]$Job.C)*as.numeric(consmatrix_rescaled[1,]$Norm.Weights)
+Job_D_MoneyWise <- as.numeric(consmatrix_rescaled[1,]$Job.D)*as.numeric(consmatrix_rescaled[1,]$Norm.Weights)
+Job_E_MoneyWise <- as.numeric(consmatrix_rescaled[1,]$Job.E)*as.numeric(consmatrix_rescaled[1,]$Norm.Weights)
+
+Job_A_MoneyWise
+Job_B_MoneyWise
+Job_C_MoneyWise
+Job_D_MoneyWise
+Job_E_MoneyWise
+
+#consmatrix[1,2:6]
+
+salaries <- as.numeric(array(unlist(consmatrix[1,2:6])))
+
+#salaries
+```
+
+```{r}
+Job_A_benefit <-sum(as.numeric(consmatrix_rescaled$Job.A[2:6])*as.numeric(consmatrix_rescaled$Norm.Weights[2:6]))
+Job_B_benefit <- sum(as.numeric(consmatrix_rescaled$Job.B[2:6])*as.numeric(consmatrix_rescaled$Norm.Weights[2:6]))
+Job_C_benefit <- sum(as.numeric(consmatrix_rescaled$Job.C[2:6])*as.numeric(consmatrix_rescaled$Norm.Weights[2:6]))
+Job_D_benefit <- sum(as.numeric(consmatrix_rescaled$Job.D[2:6])*as.numeric(consmatrix_rescaled$Norm.Weights[2:6]))
+Job_E_benefit <- sum(as.numeric(consmatrix_rescaled$Job.E[2:6])*as.numeric(consmatrix_rescaled$Norm.Weights[2:6]))
+Job_A_benefit
+
+Job_benfits <- c(Job_A_benefit,Job_B_benefit, Job_C_benefit,Job_D_benefit,Job_E_benefit)
+Job_benfits
+Job_moneybenfit <- c(Job_A_MoneyWise, Job_B_MoneyWise, Job_C_MoneyWise, Job_D_MoneyWise, Job_E_MoneyWise)
+Job_moneybenfit
+```
+
+```{r}
+tradeoff_plot <- data.frame(Job_benfits, salaries, row.names = c("Job A", "Job B", "Job C",
+                                                                        "Job D", "Job E"))
+tradeoff_plot
+
+```
+```{r}
+plot(tradeoff_plot$salaries, tradeoff_plot$Job_benfits)
+```
+```{r}
+library(ggplot2)
+
+tradeoffplot <- ggplot(tradeoff_plot,aes(x=salaries,y=Job_benfits,label=c("Job A", "Job B", "Job C",
+                                                                        "Job D", "Job E")))+
+    geom_point(shape=20,color="red",size=10)+geom_text() +
+  labs(x="Job Salary (in $)", y="Weighted Job Benefits (Not including Salary)")
+
+
+#ggsave("tradeoffplot_animate.png",plot =tradeoffplot,
+#       width = 10, dpi = 300)
+
+tradeoffplot
+```
+
+
+```{r}
+
+
+sum(as.numeric(consmatrix_rescaled$Job.A)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.B)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.C)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.D)*as.numeric(consmatrix_rescaled$Norm.Weights))
+sum(as.numeric(consmatrix_rescaled$Job.E)*as.numeric(consmatrix_rescaled$Norm.Weights))
+
+
+```
+
+```{r}
+
+```
+
+```{r}
+consmatrix_rescaled
+```
+
+
+```{r,eval=FALSE}
+#consmatrix
+
+row_data <- as.numeric(unlist(consmatrix[2, 2:6]))
+
+#row_data
+
+yy <- r_function(row_data, 1, 0)
+
+#row_data
+#yy
+plot(sort(row_data), sort(yy), type = "o", xlab = "x", ylab = "y")
+
+##order(yy)
+#Not 
+
+#sort(yy)
+#sort(row_data)
+```
+```{r, eval=FALSE}
+row_data <- as.numeric(unlist(consmatrix[3, 2:6]))
+
+#row_data
+
+yy <- r_function(row_data, 0.5, 0)
+
+#row_data
+#yy
+plot(sort(row_data), sort(yy), type = "o", xlab = "x", ylab = "y")
+```
+
+
+```{r, eval=FALSE}
+
+consmatrix
+row_data <- as.numeric(unlist(consmatrix[4, 2:6]))
+
+consmatrix
+row_data
+
+yy <- r_function(row_data, 1, 0)
+
+#row_data
+#yy
+plot(sort(row_data), sort(yy), type = "o", xlab = "x", ylab = "y")
+```
+
