@@ -19,3 +19,16 @@
 ## 2024-08-17
 
 - No meaninful results yet. I need to work on the reward plot, it should be improving try by changing learning rate, maybe it should be adaptive, or very low value. I will try to change the learning rate and see what happens.
+
+## 2024-08-21
+
+- The code seems working. Now I need to think about comparing teh optimum policy versus the simple policy. I need to think about how I can compare the two policies. I will try to implement the simple policy and see what happens.
+
+### 2024-08-22
+
+- work on how bring everthing to Markdown and hwo chatgpt to make content and make clear isllustration on how inventory mangemnge works.
+  
+### 2024-08-29
+
+- Working on the ddraft of the code, how to write and fial edit of the blog
+- 

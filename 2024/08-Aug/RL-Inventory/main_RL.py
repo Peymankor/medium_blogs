@@ -35,7 +35,7 @@ class QLearningInventory:
                 max_action = self.user_capacity - (alpha + beta)
                 for action in range(max_action + 1):
                     
-                    Q[state][action] = 0 
+                    Q[state][action] = np.random.uniform(0, 1)  # Start with small random values instead of 0 
                     #Q[state][action] = np.random.uniform(0, 1)  # Start with small random values instead of 0
     
         return Q
@@ -67,28 +67,6 @@ class QLearningInventory:
         next_state = (new_alpha, action)
 
         return next_state, reward
-        
-        # Simulate the environment to get the next state and reward
-        
-        # alpha, beta = state
-        # init_inv = alpha + beta
-        # #new_alpha = init_inv + action
-        # demand = np.random.poisson(self.poisson_lambda)
-        # print("Demand:", demand)
-        # if demand <= (init_inv-1):
-        #     reward = -alpha * self.holding_cost
-        #     new_alpha = init_inv - demand
-        # else:
-        #     transition_prob = 1 - poisson.cdf(init_inv - 1, self.poisson_lambda)
-        #     transition_prob2 = 1 - poisson.cdf(init_inv, self.poisson_lambda)
-        #     reward = -alpha * self.holding_cost - self.stockout_cost * (
-        #         (self.poisson_lambda * transition_prob) - init_inv * transition_prob2)
-            
-        #     new_alpha = 0
-        
-        # next_state = (new_alpha, action)
-        
-        # return next_state, reward
 
     def choose_action(self, state):
         # Epsilon-greedy action selection
@@ -100,12 +78,11 @@ class QLearningInventory:
             best_action= max(self.Q[state], key=self.Q[state].get)
             
             return best_action
-            #return np.argmax(self.Q[state])  # Exploit
 
     def update_Q(self, state, action, reward, next_state):
         # Update the Q-table based on the state, action, reward, and next state
         best_next_action = max(self.Q[next_state], key=self.Q[next_state].get)
-        np.argmax(self.Q[next_state])
+       
         td_target = reward + self.gamma * self.Q[next_state][best_next_action]
         td_error = td_target - self.Q[state][action]
         self.Q[state][action] += self.alpha * td_error
@@ -117,34 +94,26 @@ class QLearningInventory:
 
         for episode in range(self.episodes):
             
-            state = (0, 0)
-            #state = (0, 0)  # Initialize the state at the start of each episode
+            #state = (0, 0)
+            alpha_0 =  random.randint(0, self.user_capacity)
+            beta_0 = random.randint(0, self.user_capacity - alpha_0)
+            state = (alpha_0, beta_0)  # Initialize the state at the start of each episode
             total_reward = 0  # Initialize the total reward for the current episode
             action_taken = 0
-
-            #state = (random.randint(0, self.user_capacity), random.randint(0, self.user_capacity))
-            #state = (0, 0)
-            #while True:
             
             while action_taken < self.max_actions_per_episode:
 
                 action = self.choose_action(state)
                 next_state, reward = self.get_next_state_and_reward(state, action)
+                #print("State:", next_state)
                 self.update_Q(state, action, reward, next_state)
                 total_reward += reward
                 state = next_state
                 action_taken += 1
 
-            self.epsilon = max(0.1, self.epsilon * 0.995)
+            self.epsilon = max(0.01, self.epsilon * 0.995)
             rewards_per_episode.append(total_reward)
-            print("Q-table:")
-            print(self.Q)
-            #cumulative_rewards += total_reward
-            #print("Q-table:")
-            #print(self.Q)
-            #state = next_state
-             #   if state[0] == 0:  # Stop when inventory reaches zero
-             #       break
+          
         print("Final Q-table:")
         print(self.Q)
         return rewards_per_episode
@@ -155,20 +124,16 @@ class QLearningInventory:
             #print(max(self.Q[state], key=self.Q[state].get))
             optimal_policy[state] = max(self.Q[state], key=self.Q[state].get)
         return optimal_policy
-    #def get_optimal_value_function(self):
-    #    # Get the optimal value function from the Q-table
-    #    value_function = {state: max(actions) for state, actions in self.Q.items()}
-    #    return pd.DataFrame.from_dict(value_function, orient='index', columns=['Value Function'])
 
 # Example usage:
-user_capacity = 2
-poisson_lambda = 1.0
+user_capacity = 10
+poisson_lambda = 10
 holding_cost = 1
-stockout_cost = 10
-gamma = 0.9
-alpha = 0.001
-epsilon = 0.1
-episodes = 50
+stockout_cost = 5
+gamma = 0.99
+alpha = 0.05
+epsilon = 0.01
+episodes = 1000
 max_actions_per_episode = 100
 
 
@@ -180,24 +145,116 @@ ql.train()
 optimal_policy = ql.get_optimal_policy()
 #optimal_value_function = ql.get_optimal_value_function()
 
-print("Optimal Policy:")
-print(optimal_policy)
+#print("Optimal Policy:")
+#print(optimal_policy)
 
-import matplotlib.pyplot as plt
+import numpy as np
 
-rewards_per_episode = ql.train()
 
-print("Rewards per Episode:")
-print(rewards_per_episode)
+def simulate_environment(episodes, user_capacity, poisson_lambda, 
+                         optimal_policy, holding_cost, stockout_cost,
+                         policy_to_act):
+    """
+    Test the optimal policy on the new environment and calculate the total reward.
 
-print("Optimal Policy:")
-print(optimal_policy)
+    Args:
+        episodes (int): The number of episodes to simulate.
+        user_capacity (int): The maximum user capacity.
+        poisson_lambda (float): The lambda parameter for the Poisson distribution.
+        optimal_policy (dict): A dictionary mapping states to actions.
+        holding_cost (float): The cost per unit for holding inventory.
+        stockout_cost (float): The cost per unit for stockout.
+
+    Returns:
+        float: The total reward accumulated over all episodes.
+    """
+    total_reward = 0
+
+    alpha_0 =  random.randint(0, user_capacity)
+    beta_0 = random.randint(0, user_capacity - alpha_0)
+    state = (alpha_0, beta_0)  # Initialize the state at the start of each episode
+    
+    for _ in range(episodes):
+
+        action = policy_to_act.get(state, 0)
+        alpha, beta = state
+        demand = np.random.poisson(poisson_lambda)
+        new_alpha = max(0, alpha + beta - demand)
+        next_state = (new_alpha, action)
+
+        #action, demand, next_state = new_environment(user_capacity, 
+        #                                            poisson_lambda, 
+        #                                            state, action)
+        #alpha, beta = state
+        #action = optimal_policy.get(state, 0)
+        
+        init_inv = alpha + beta  # Initial inventory (alpha + items on order)
+        #new_alpha = max(0, init_inv - demand)
+        
+        # Calculate the reward
+        holding_cost_value = -new_alpha * holding_cost
+        stockout_cost_value = -(demand - init_inv) * stockout_cost if demand > init_inv else 0
+        
+        reward = holding_cost_value + stockout_cost_value
+        total_reward += reward
+        
+        state = next_state
+
+    return total_reward
+
+def constrained_order_up_to_policy(state, user_capacity, target_level):
+    alpha, beta = state
+    # Determine the maximum quantity you can order without exceeding capacity
+    max_possible_order = user_capacity - (alpha + beta)
+    # Calculate the desired order quantity to reach the target level
+    desired_order = max(0, target_level - (alpha + beta))
+    # The action is the minimum of what is possible and what is desired
+    return min(max_possible_order, desired_order)
+
+# Generate the simple policy with the capacity constraint
+target_level = 5
+simple_policy = {state: constrained_order_up_to_policy(state, user_capacity, target_level) for state in optimal_policy.keys()}
+
+#simple_policy = {state: user_capacity-state[0]-state[1] for state in optimal_policy.keys()}
+#simple_policy = {state: 1 for state in optimal_policy.keys()}
+#print("Simple Policy:")
+#print(simple_policy)
+
+#print("Optimal Policy:")
+#print(optimal_policy)
+
+episodes_val = 10000
+
+total_reward_opt = simulate_environment(episodes_val, user_capacity, 
+                                    poisson_lambda, optimal_policy, 
+                                    holding_cost, stockout_cost,
+                                    policy_to_act=optimal_policy)  
+
+print("Total Reward on New Environment: Optimum", total_reward_opt)
+
+total_reward_simp = simulate_environment(episodes_val, user_capacity, 
+                                    poisson_lambda, optimal_policy, 
+                                    holding_cost, stockout_cost,
+                                    policy_to_act=simple_policy)  
+
+print("Total Reward on New Environment Simple Polciy:", total_reward_simp)
+
+#print("Total Reward on New Environment:", total_reward)
+#import matplotlib.pyplot as plt
+
+#rewards_per_episode = ql.train()
+
+#print("Rewards per Episode:")
+#print(rewards_per_episode)
+
+#print("Optimal Policy:")
+#print(optimal_policy)
 # # Plot rewards per episode
-plt.plot(range(1, episodes+1), rewards_per_episode)
-plt.xlabel('Episode')
-plt.ylabel('Reward')
-plt.title('Rewards per Episode')
-plt.show()
+#plt.plot(range(1, episodes+1), rewards_per_episode)
+#plt.xlabel('Episode')
+#plt.ylabel('Reward')
+#plt.title('Rewards per Episode')
+#plt.show()
 #print("\nOptimal Value Function:")
 #print(optimal_value_function)
 
@@ -218,3 +275,46 @@ plt.show()
 
 # # Output the best action
 # print(best_action)
+
+import matplotlib.pyplot as plt
+import numpy as np  # Make sure to import NumPy
+
+# Sample data (assuming simple_policy and optimal_policy are dictionaries)
+# Replace this with your actual data
+#simple_policy = {'State 1': 2, 'State 2': 3, 'State 3': 1}
+#optimal_policy = {'State 1': 3, 'State 2': 4, 'State 3': 2}
+
+# Get the keys and values of the simple policy
+simple_keys = list(simple_policy.keys())
+simple_values = np.array(list(simple_policy.values()))  # Convert to NumPy array
+
+# Get the keys and values of the optimal policy
+optimal_keys = list(optimal_policy.keys())
+optimal_values = np.array(list(optimal_policy.values()))  # Convert to NumPy array
+
+# Ensure both policies have the same states
+assert simple_keys == optimal_keys, "The keys (states) of both policies must match."
+
+# Number of bars
+n = len(simple_keys)
+
+# Create a range for the bars
+bar_width = 0.35
+index = np.arange(n)
+
+# Create the bar chart
+plt.bar(index, simple_values, bar_width, label='Simple Policy')
+plt.bar(index + bar_width, optimal_values, bar_width, label='Optimal Policy')
+
+# Rotate x-axis labels for better visibility
+plt.xticks(index + bar_width / 2, simple_keys, rotation=45)
+
+# Add legend
+plt.legend()
+plt.xlabel('State')
+plt.ylabel('Action')
+plt.title('Comparison of Simple Policy and Optimal Policy')
+plt.legend()
+
+# Show the plot
+plt.show()
