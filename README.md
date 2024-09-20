@@ -1,12 +1,15 @@
-# medium_blogs
-## Test
-$$KL(π_{new} || π_{old}) = Σ[ π_{new}(a | s) * log(π_{new}(a | s) / π_{old}(a | s)) ]$$
+# Medium Blogs Repository
 
+Welcome to the Medium Blogs repository! This repository contains all the markdown files for my Medium blog posts.
 
-![Alt text](image.png)
+You can find my blog posts on my Medium profile [Here](https://medium.com/@peymankor).
 
-![Alt text](image-1.png)
+## Introduction
 
-![Alt text](image-2.png)
+This repository is a collection of my Medium blog posts. Each post is written in markdown format and is stored in this repository for easy access and version control.
 
-![Alt text](image-3.png)
+## License
+
+This repository is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
+
+Thank you for visiting and happy reading!
