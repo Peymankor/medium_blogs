@@ -1,112 +1,251 @@
 import numpy as np
-from scipy.stats import poisson
-import pandas as pd
+import random
+import matplotlib.pyplot as plt
 
-class MarkovDecisionProcess:
-    def __init__(self, user_capacity, poisson_lambda, holding_cost, stockout_cost, gamma):
-        # Initialize the MDP with given parameters
+class QLearningInventory:
+    def __init__(self, user_capacity, poisson_lambda, holding_cost, stockout_cost, 
+                 gamma, alpha, epsilon, episodes, max_actions_per_episode):
+        
+        # Initialize parameters
         self.user_capacity = user_capacity
         self.poisson_lambda = poisson_lambda
-        self.holding_cost, self.stockout_cost = holding_cost, stockout_cost
+        self.holding_cost = holding_cost
+        self.stockout_cost = stockout_cost
         self.gamma = gamma
-        self.full_MDP = self.create_full_MDP()  # Create the full MDP
+        self.alpha = alpha
+        self.epsilon = epsilon
+        self.episodes = episodes
+        self.max_actions_per_episode = max_actions_per_episode
+        self.batch = []  # Initialize the batch to store experiences
 
-    def create_full_MDP(self):
-        # Create the full MDP dictionary
-        MDP_dict = {}
+    def initialize_Q(self):
+        # Initialize the Q-table as a dictionary
+        Q = {}
         for alpha in range(self.user_capacity + 1):
             for beta in range(self.user_capacity + 1 - alpha):
-                state, init_inv = (alpha, beta), alpha + beta 
-                action = {}
-                for order in range(self.user_capacity - init_inv + 1):
-                    dict1 = {}
-                    for i in range(init_inv + 1):
-                        if i <= (init_inv - 1):
-                            transition_prob = poisson.pmf(i, self.poisson_lambda)
-                            dict1[((init_inv - i, order), -alpha * self.holding_cost)] = transition_prob
-                        else:
-                            transition_prob = 1 - poisson.cdf(init_inv - 1, self.poisson_lambda)
-                            transition_prob2 = 1 - poisson.cdf(init_inv, self.poisson_lambda)
-                            reward = -alpha * self.holding_cost - self.stockout_cost * (
-                                (self.poisson_lambda * transition_prob) - init_inv * transition_prob2)
-                            dict1[((0, order), reward)] = transition_prob
-                    action[order] = dict1
-                MDP_dict[state] = action
-        return MDP_dict
+                state = (alpha, beta)
+                Q[state] = {}
+                max_action = self.user_capacity - (alpha + beta)
+                for action in range(max_action + 1):
+                    Q[state][action] = np.random.uniform(0, 1)  # Small random values
+        return Q
 
-    def policy_0_gen(self):
-        # Generate an initial policy
-        return {(alpha, beta): self.user_capacity - (alpha + beta) 
-                for alpha in range(self.user_capacity + 1) 
-                for beta in range(self.user_capacity + 1 - alpha)}
+    def simulate_transition_and_reward(self, state, action):
 
-    def MRP_using_fixedPolicy(self, policy):
-        # Create the MRP using a fixed policy
-        return {state: self.full_MDP[state][action] 
-                for state, action in policy.items()}
+        alpha, beta = state
+        init_inv = alpha + beta
+        demand = np.random.poisson(self.poisson_lambda)
+        
+        new_alpha = max(0, init_inv - demand)
+        holding_cost = -new_alpha * self.holding_cost
+        stockout_cost = 0
+        
+        if demand > init_inv:
+            stockout_cost = -(demand - init_inv) * self.stockout_cost
+        
+        reward = holding_cost + stockout_cost
+        next_state = (new_alpha, action)
+        
+        return next_state, reward
+
+    def choose_action(self, state):
+
+        # Epsilon-greedy action selection
+        if np.random.rand() < self.epsilon:
+            return np.random.choice(self.user_capacity - (state[0] + state[1]) + 1)
+        else:
+            return max(self.Q[state], key=self.Q[state].get)
+
+    def update_Q(self, batch):
+        # Batch update of the Q-table
+        for state, action, reward, next_state in batch:
+            best_next_action = max(self.Q[next_state], key=self.Q[next_state].get)
+            td_target = reward + self.gamma * self.Q[next_state][best_next_action]
+            td_error = td_target - self.Q[state][action]
+            self.Q[state][action] += self.alpha * td_error
+
+    def train(self):
+
+        self.Q = self.initialize_Q()  # Reinitialize Q-table for each training run
+
+        for episode in range(self.episodes):
+            alpha_0 = random.randint(0, self.user_capacity)
+            beta_0 = random.randint(0, self.user_capacity - alpha_0)
+            state = (alpha_0, beta_0)
+            #total_reward = 0
+            self.batch = []  # Reset the batch at the start of each episode
+            action_taken = 0
+            while action_taken < self.max_actions_per_episode:
+                action = self.choose_action(state)
+                next_state, reward = self.simulate_transition_and_reward(state, action)
+                self.batch.append((state, action, reward, next_state))  # Collect experience
+                state = next_state
+                action_taken += 1
+            
+            self.update_Q(self.batch)  # Update Q-table using the batch
+            
+
+    def get_optimal_policy(self):
+        optimal_policy = {}
+        for state in self.Q.keys():
+            optimal_policy[state] = max(self.Q[state], key=self.Q[state].get)
+        return optimal_policy
     
-    def calculate_state_value_function(self, MRP_policy):
-        # Calculate the expected immediate rewards from the MRP policy
-        E_immediate_R = {}
-        for from_state, value in MRP_policy.items():
-            expected_reward = sum(reward[1] * prob for (reward, prob) in value.items())
-            E_immediate_R[from_state] = expected_reward
+    def test_policy(self, policy, episodes):
+        """
+        Test a given policy on the environment and calculate the total reward.
 
-        # Create the transition probability matrix
-        states = list(MRP_policy.keys())
-        trans_prob = np.zeros((len(states), len(states)))
-        df_trans_prob = pd.DataFrame(trans_prob, columns=states, index=states)
-        for i, from_state in enumerate(states):
-            for j, to_state in enumerate(states):
-                for (new_state, reward) in MRP_policy.get(from_state, {}):
-                    if new_state == to_state:
-                        probability = MRP_policy[from_state].get((new_state, reward), 0.0)
-                        df_trans_prob.iloc[i, j] = probability
+        Args:
+            policy (dict): A dictionary mapping states to actions.
+            episodes (int): The number of episodes to simulate.
 
-        # Calculate the state value function
-        R_exp = np.array(list(E_immediate_R.values()))
-        val_func_vec = np.linalg.solve(np.eye(len(R_exp)) - self.gamma * df_trans_prob, R_exp)
-        MarkRevData = pd.DataFrame({'Expected Immediate Reward': R_exp, 'Value Function': val_func_vec}, index=states)
-        return MarkRevData
+        Returns:
+            float: The total reward accumulated over all episodes.
+        """
+        total_reward = 0
+        alpha_0 = random.randint(0, self.user_capacity)
+        beta_0 = random.randint(0, self.user_capacity - alpha_0)
+        state = (alpha_0, beta_0)  # Initialize the state
+        
+        for _ in range(episodes):
 
-    def greedy_operation(self, MDP_full, state_val_policy, old_policy):
-        # Perform the greedy operation to improve the policy
-        new_policy = {}
-        for state in old_policy.keys():
-            max_q_value, best_action  = float('-inf'), None
-            state_val_dict = state_val_policy.to_dict(orient="index")
-            for action in MDP_full[state].keys():
-                q_value = 0
-                for (next_state, immediate_reward), probability in MDP_full[state][action].items():
-                    q_value = q_value +  probability * (immediate_reward + self.gamma *
-                        (state_val_dict[next_state]["Value Function"]))
-                if q_value > max_q_value:
-                    max_q_value, best_action = q_value, action
-            new_policy[state] = best_action
-        return new_policy
+            action = policy.get(state, 0)
+            next_state, reward = self.simulate_transition_and_reward(state, action)
+            total_reward += reward
+            state = next_state
 
-    def policy_iteration(self):
-        # Perform policy iteration to find the optimal policy
-        policy = self.policy_0_gen()
-        while True:
-            MRP_policy_p0 = self.MRP_using_fixedPolicy(policy)
-            value_function = self.calculate_state_value_function(MRP_policy_p0)
-            new_policy = self.greedy_operation(self.full_MDP, value_function, policy)
-            if new_policy == policy:
-                break
-            policy = new_policy
-        opt_policy, opt_value_func = new_policy, value_function
-        return opt_policy, opt_value_func
-    
-#######
+        return total_reward
 
-if __name__ == "__main__":
-    user_capacity, poisson_lambda = 2, 1
-    holding_cost, stockout_cost = 1.0, 10.0
-    gamma = 0.9
-    mdp = MarkovDecisionProcess(user_capacity, poisson_lambda, holding_cost, stockout_cost, gamma)
-    opt_policy, opt_value_func = mdp.policy_iteration()
-    print("Optimal Policy:")
-    print(opt_policy)
-    print("\nOptimal Value Function:")
-    print(opt_value_func)
+# Example usage:
+## Define the parameters
+user_capacity = 10
+poisson_lambda = 4
+holding_cost = 8
+stockout_cost = 10
+gamma = 0.9
+alpha = 0.1
+epsilon = 0.1
+episodes = 1000
+max_actions_per_episode = 1000
+
+
+## Define the Class
+ql = QLearningInventory(user_capacity, poisson_lambda, holding_cost, stockout_cost, gamma, 
+                        alpha, epsilon, episodes, max_actions_per_episode)
+
+## Train Agent
+ql.train()
+
+## Get the Optimal Policy
+optimal_policy = ql.get_optimal_policy()
+
+
+
+# Visualize the qlearning policy
+
+states = list(optimal_policy.keys())
+
+## Number of states
+n_states = len(states)
+
+## Create positions for bars with a small offset
+x = np.arange(n_states)  # Positions for the states on the x-axis
+
+## Create a grouped bar chart
+fig, ax = plt.subplots(figsize=(14, 6))
+
+## Plot optimal policy bars
+ax.bar(x, [optimal_policy[state] for state in states], 
+       label=' Q-Learning Policy Order', color='purple')
+
+## Plot simple policy bars next to the optimal policy bars
+
+## Set labels and titles
+ax.set_xlabel('State (alpha: on-hand inventory, beta: on-order inventory)')
+ax.set_ylabel('Number of Order')
+ax.set_xticks(x)  # Center the ticks between the bars
+ax.set_xticklabels(states, rotation=90)
+ax.set_title('Number of Orders for each State from Q-Learning Policy')
+
+## Add legend
+ax.legend()
+
+## Display plot
+plt.tight_layout()
+
+## Save the plot after displaying it
+plt.savefig('./Fig/qlearningpolicy.png', dpi=300)
+
+
+
+# Create a simple policy
+def order_up_to_policy(state, user_capacity, target_level):
+    alpha, beta = state
+    max_possible_order = user_capacity - (alpha + beta)
+    desired_order = max(0, target_level - (alpha + beta))
+    return min(max_possible_order, desired_order)
+
+
+target_level = 10
+simple_policy = {state: order_up_to_policy(state, user_capacity, target_level) for state in optimal_policy.keys()}
+
+
+
+# Visualize the simple policy and Q -learning
+
+# Create positions for bars with a small offset
+bar_width = 0.35  # Width of each bar
+x = np.arange(n_states)  # Positions for the states on the x-axis
+
+# Create a grouped bar chart
+fig, ax = plt.subplots(figsize=(14, 6))
+
+# Plot optimal policy bars
+ax.bar(x, [optimal_policy[state] for state in states], width=bar_width, color='purple', label=' Q-Learning Policy Order')
+
+# Plot simple policy bars next to the optimal policy bars
+ax.bar(x + bar_width, [simple_policy[state] for state in states], width=bar_width, color='orange', label='Simple Policy Order')
+
+# Set labels and titles
+ax.set_xlabel('State (alpha: on-hand inventory, beta: on-order inventory)')
+ax.set_ylabel('Number of Order')
+ax.set_xticks(x + bar_width / 2)  # Center the ticks between the bars
+ax.set_xticklabels(states, rotation=90)
+ax.set_title('Comparison of Orders Between Q-Learning Policy and Simple Policy')
+
+# Add legend
+ax.legend()
+
+# Display plot
+plt.tight_layout()
+
+# Save the plot in high quality
+plt.savefig('./Fig/plot_comp.png', dpi=300)
+
+
+# Test the optimal policy vs a simple policy
+episodes_val = 10000
+total_reward_qlearning = ql.test_policy(optimal_policy, episodes_val)
+print("Total Reward with Q-Learning Policy", total_reward_qlearning)
+
+target_level = 10
+simple_policy = {state: order_up_to_policy(state, user_capacity, target_level) for state in optimal_policy.keys()}
+
+# Test the simple policy
+total_reward_simp = ql.test_policy(simple_policy, episodes_val)
+print("Total Reward with Simple Policy:", total_reward_simp)
+
+fig, ax = plt.subplots(figsize=(14, 6))
+
+# Create a bar plot with narrower bars
+labels = ['Q-Learning Policy', 'Simple Policy']
+rewards = [-total_reward_qlearning, -total_reward_simp]
+
+plt.bar(labels, rewards, width=0.4)  # Set the width to 0.4
+plt.xlabel('Policy')
+plt.ylabel('Total Cost of Running Inventory')
+plt.title('Comparison of Total Costs Following Two Policies')
+
+plt.savefig('./Fig/plot_comp_rewards.png', dpi=300)
+
+plt.show()
