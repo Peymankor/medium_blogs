@@ -9,70 +9,71 @@ print_background: false
 ---
 
 
-# Smart Ordering: Improve Your Inventory Management with Reinforcement Learning
+# Optimize Your Inventory Management with Reinforcement Learning: Hands-on Python Tutorial
 
-A complete guide on how to use Reinforcemnet learning (Q-Learning method) for Inventory Management with Hands-on Python code
+A complete guide on how to use reinforcement earning (Q-Learning method) for inventory management with hands-on Python code
 
 ## Inventory Management - What Problem Are We Solving?
 
-Imagine you are managing a bike shop. Every day, you need to decide how many bikes to order from your supplier. If you order too many, you incur high holding costs (cost of string bikes overnights); if you order too few, you might miss out on potential sales. The challenge is to develop a strategy that balances these trade-off optimally.
-Inventory optimization is a crucial problem in various industries, where the goal is to determine the optimal quantity of products to order periodically to maximize profitability. Previously, we discussed how to solve this problem using Dynamic Programming (DP) with the Markov Decision Process (MDP).
+Imagine you are managing a bike shop. Every day, you need to decide how many bikes to order from your supplier. If you order too many, you incur high holding costs (cost of storing bikes overnights); if you order too few, you might miss out on potential sales. The challenge is to develop a strategy that balances these trade-off optimally.
+Inventory optimization is a crucial problem in various industries, where the goal is to determine the optimal quantity of products to order periodically to maximize profitability. Previously, we discussed how to solve this problem using Dynamic Programming (DP) with the Markov Decision Process (MDP) [Here](https://medium.com/towards-artificial-intelligence/inventory-optimization-with-dynamic-programming-in-less-than-100-lines-of-python-code-ab1cc58ef34c). 
+However, the DP approach requires a complete model of the environment (in this case, need to know the probability distribution of demand), which may not always be available or practical.
 
-### Solution Method: Reinforcemnet learning
-
-Here, the Reinforcemnet learning approach is presented. The goal is to build a "data-driven" agency that learns how many to order from a bike shop in the most optimal way. This post will explore a different approach - using Reinforcement Learning, specifically Q-learning, to find the optimal inventory policy.
+Here, the Reinforcement Learning (RL) approach is presented. The goal is to build a "data-driven" agency that learns how many to order from a bike shop in the most optimal way. This post will explore Reinforcement Learning approach, specifically Q-learning, to find the optimal inventory policy.
 
 ## How to Frame the Inventory Management Problem?
 
 Before diving into the Q-learning method, it's essential to understand the basics of the inventory optimization problem. At its core, inventory optimization is a Sequential Decision-Making Problem, where decisions made today affect the outcomes and choices available tomorrow. Let's break down the key elements of this problem: the state, uncertainty, and recurring decisions.
-State: What's Happening Right Now?
+
+**State**: What's Happening Right Now?
 In the context of a bike shop, the state represents the current situation regarding inventory. It's defined by two key components:
 α (Alpha): The number of bikes you currently have in the store. (referred to as On-Hand Inventory)
 β (Beta): The number of bikes that you ordered yesterday and are expected to arrive tomorrow morning. These bikes are still in transit. (referred to as On-Order Inventory)
-
 Together, (α,β) form the state, which gives a snapshot of your inventory status at any given moment.
-Uncertainty: What Could Happen?
-Uncertainty in this problem arises from the random demand for bikes each day. You don't know exactly how many customers will walk in and request a bike, but you can model this uncertainty using a Poisson distribution. 
-Decisions: What Do You Need to Decide?
-As the bike shop owner, you face a recurring decision every day at 6 PM: How many bikes should you order from the supplier?
-This decision needs to account for:
-The current state of your inventory (α,β).
-There is uncertainty in customer demand for the following day.
 
-The Daily Cycle: How Does It All Play Out?
-Here's how a typical 24-hour cycle looks for managing your bike shop's inventory:
-6 PM: Observe the current state St:(α,β) of your inventory.
-6 PM: Make the decision on how many new bikes to order.
+**Uncertainty**: What Could Happen?
+Uncertainty in this problem arises from the random demand for bikes each day. You don't know exactly how many customers will walk in and request a bike, making it challenging to predict the exact demand. 
+
+**Decisions**: How many items to order every day?
+As the bike shop owner, you face a recurring decision every day at 6 PM: How many bikes should you order from the supplier? Your decision needs to account for both the current state of your inventory (α,β) and also the uncertainty in customer demand for the following day.
+
+
+Here, this is overview of how inventory management is divided into different steps. A typical 24-hour cycle looks for managing your bike shop's inventory is as follows:
+
+6 PM: Observe the current state St:(α,β) of your inventory. (**State**)
+6 PM: Make the decision on how many new bikes to order. (**Decision**)
 6 AM: Receive the bikes you ordered 36 hours ago.
 8 AM: Open the store to customers.
-8 AM - 6 PM: Experience customer demand throughout the day
+8 AM - 6 PM: Experience customer demand throughout the day. (**Uncertainty**)
 6 PM: Close the store and prepare for the next cycle.
 
-This daily sequence of events is crucial for framing the inventory optimization problem and sets the stage for applying Q-learning to find the optimal ordering strategy.
-
+A graphical representation of the inventory management process flow is shown below:
 ![Inventory Management Process Flow](./Img/processflow.png)
 
 ## Implementing Q-Learning for Inventory Optimization Problem
 
-Q-learning is a model-free reinforcement learning algorithm that learns the optimal action-selection policy for any given state. Unlike the DP approach, which requires a complete model of the environment, Q-learning learns directly from the interaction with the environment by updating a Q-table, which stores the expected future rewards for each state-action pair.
+Q-learning is a model-free reinforcement learning algorithm that learns the optimal action-selection policy for any given state. Unlike the DP approach, which requires a complete model of the environment, Q-learning learns directly from the interaction with the environment (here uncertainty and reward it gets) by updating a Q-table.
+
 The Key Components of Q-Learning
+
 States: The state represents the current condition of the inventory. In our case:
 
 α: Number of bikes currently in the store.
 β: Number of bikes ordered the previous day that will arrive tomorrow.
 
 Actions: The number of bikes to order today.
-Rewards: The immediate cost or profit resulting from the state-action pair. This includes holding costs and stockout costs.
+
 Q-Table: A table that stores the expected future rewards for each state-action pair.
 
-### Initialization of Q Table
+**Initialization of Q Table**
 
-In this work, the Q-table is initialized as a dictionary Q. States are represented by tuples (alpha, beta), where:
+In this work, the Q-table is initialized as a dictionary named Q. States are represented by tuples (alpha, beta), where:
 alpha is the number of items in stock (on-hand inventory).
 beta is the number of items on order (on-order inventory).
 
 Actions are possible inventory order quantities that can be taken in each state.
-For each state (alpha, beta), the possible actions are determined by the remaining capacity (self.user_capacity - (alpha + beta)).
+For each state (alpha, beta), the possible actions depend on how much space is left in the inventory ( remaining capacity = Inventory Capacity - (alpha + beta)). The restriction is that the number of items ordered cannot exceed the remaining capacity of the inventory.
+
 Q-values (Q[state][action]) are initialized with small random values to encourage exploration.
 
 The schematic design of Q value is visualized as below:
@@ -99,12 +100,7 @@ The Q-learning algorithm iteratively updates the Q-table using the following equ
 
 $$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ \text{reward} + \gamma \max_{a'} Q(s', a') - Q(s, a) \right]$$
 
-Where:
-s is the current state.
-a is the action taken.
-s' is the next state.
-\( α \) is the learning rate.
-\( γ \) is the discount factor.
+Where s is the current state, a is the action taken, s' is the next state, \( α \) is the learning rate. and \( γ \) is the discount factor.
 
 We implemented this equation as below in Python:
 
@@ -135,11 +131,9 @@ def update_Q(self, state, action, reward, next_state):
 ### Simulating Transitions and Rewards in Q-Learning for Inventory Optimization
 
 The current state is represented by a tuple (alpha, beta), where:
-alpha is the current on-hand inventory (items in stock).
-beta is the current on-order inventory (items ordered but not yet received).
-init_inv calculates the total initial inventory by summing alpha and beta.
+alpha is the current on-hand inventory (items in stock), beta is the current on-order inventory (items ordered but not yet received), init_inv calculates the total initial inventory by summing alpha and beta.
 
-Then, we need to simulate Customer demand using Poisson distribution with mean value "self.poisson_lambda". Here, the demand shows the randomness of customer demand:
+Then, we need to simulate customer demand using Poisson distribution with mean value "self.poisson_lambda". Here, the demand shows the randomness of customer demand:
 
 ```python
 alpha, beta = state
@@ -147,8 +141,10 @@ init_inv = alpha + beta
 demand = np.random.poisson(self.poisson_lambda)
 ```
 
+Note: Poisson distribution is used to model the demand, which is a common choice for modeling random events like customer arrivals. However, we are using Q-learning approach , meaning that is is possible that we can train the model with historical demand data or live interacting with environment. In its core, reinforcement learning is about learning from the data, and it does not require prior knowledge of model.
+
 Now, the "next alpha" which is in-hand inventory can be written as max(0,init_inv-demand) . What that means is that if demand is more than initial inventory, then the new alpha would be zero, if not, init_inv-demand.
-The cost comes in two parts. The holding cost all the bike in store multiplied by the unit cost of holding cost. Then, we have another cost, which is stockout cost. It is a cost that we need to pay for the cases of missed demand. These two parts form the "reward" which we try to maximize using reinforcement learning method.
+The cost comes in two parts. The **holding cost**: all the bike in store multiplied by the unit cost of holding cost. Then, we have another cost, which is **stockout cost**. It is a cost that we need to pay for the cases of missed demand. These two parts form the "reward" which we try to maximize using reinforcement learning method.( a better way to put is we want to minimize the cost, so we maximize the reward).
 
 ```python
 new_alpha = max(0, init_inv - demand)
@@ -180,14 +176,13 @@ def choose_action(self, state):
         return max(self.Q[state], key=self.Q[state].get)
 ```
 
-It is worth noting that the constraint of (user_capacity - state[0]+state[1]) is due to making sure that the number of bicycles does not overrun the capacity of inventory.
-
 ### Training RL Agent
 
-In order to train AI agents and go through the training. First, we need to initialize the Q (empty dictionary structure). Then, the training was down to a number of "batches," defined by the number of episodes. Each episode starts with a randomly assigned state, and while the number of actions is lower than max_actions_per_episode, the collecting data for that batch continues.
- 
-The follow of the process is like this: we are in state (alpha, beta), then need action to make, we have transition and rewards function that give next state and reward, we add the data point to (state, action, reward, next state). When we finish the experiences in one batch, the Q table is gets updated.
+The traning of the RL agent is done by the "train" function, and it is follow as: First, we need to initialize the Q (empty dictionary structure). Then, experinces is collected in each batch (self.batch.append((state, action, reward, next_state))), and the Q table is updated at the end of each batch (self.update_Q(self.batch)).
+The number of episodes is limited to "max_actions_per_episode" in each batch. The number of episodes is the number of times the agent interacts with the environment to learn the optimal policy.
 
+Each episode starts with a randomly assigned state, and while the number of actions is lower than max_actions_per_episode, the collecting data for that batch continues.
+ 
 ```python
 def train(self):
 
@@ -212,15 +207,14 @@ def train(self):
 
 ## Example Case and Results
 
-Here is the initial dataset needed to run the code training.
-Here, user_capicty is 10, which is the total number of items that inventory can hold (capacity). Then, this position lambda is the lambda term in the demand distribution, which has a value of 5. Holding costs is 2, which is the cost of holding an item in inventory overnight, and stockout cost, which is the cost of missed demand (assume that the item had a customer that data and the price of the item was, but you did not have the item in your inventory) is 5. gamma value lower than one is needed in the equation to discount the future reward (0.9), where alpha (learning rate ) is 0.1. The epsilon term is the term control exploration-exploitation dilemma. The episodes are 1000, and each batch consists of 1000 (max actions per episode).
+This is example case hon how to pull together all above codes, and see how the Q-learning agent learns the optimal policy for inventory management.Here, user_capicty (capacity of storage) is 10, which is the total number of items that inventory can hold (capacity). Then, this position_lambda is the lambda term in the demand distribution, which has a value of 4. Holding costs is 8, which is the cost of holding an item in inventory overnight, and stockout cost, which is the cost of missed demand (assume that the item had a customer that day and the price of the item was, but you did not have the item in your inventory) is 10. gamma value lower than one is needed in the equation to discount the future reward (0.9), where alpha (learning rate ) is 0.1. The epsilon term is the term control exploration-exploitation dilemma. The episodes are 1000, and each batch consists of 1000 (max actions per episode).
 
 ```python
 # Example usage:
 user_capacity = 10
-poisson_lambda = 5
-holding_cost = 2
-stockout_cost = 5
+poisson_lambda = 4
+holding_cost = 8
+stockout_cost = 10
 gamma = 0.9
 alpha = 0.1
 epsilon = 0.1
@@ -243,16 +237,16 @@ ql.train()
 optimal_policy = ql.get_optimal_policy()
 ```
 
-### Results
+**Results**
 
-Now that we have the optimum policy found from the Q learning method, we can visualize the results and see what they look like. The axis states, which is a tuple of (alpha, beta), and the y-axis is the "Optimum" order.
+Now that we have the optimum policy found from the Q-learning method, we can visualize the results and see what they look like. The axis states, which is a tuple of (alpha, beta), and the y-axis is the "optimum" order.
 
 ![Optimum Policy](./Fig/qlearningpolicy.png)
 
-Couples of learning can be done by looking at the plot. First, as we go toward the right, we see that the number of optimum orders decreases. When we go right, the alpha value increases (in-hand inventory), meaning we need to "order" less, as inventory in place can fulfill the demand. Secondly, When alpha is constant, with increasing beta, we lower the order of new sites. It can be understood that this is due to the fact that when "we have more item "on inventory" we do not need incras the orders.
+Couples of learning can be done by looking at the plot. First, as we go toward the right, we see that the number of orders decreases. When we go right, the alpha value increases (in-hand inventory), meaning we need to "order" less, as inventory in place can fulfill the demand. Secondly, When alpha is constant, with increasing beta, we lower the order of new sites. It can be understood that this is due to the fact that when "we have more item "on order" we do not need increase the orders.
 
 
-### Compare the Policy to Base Line
+**Compare the Policy to Base Line**
 
 Now that we used Q-learning to find the optimal policy (how many orders are given to the state (state)) , now we want to compare it to the baseline policy and calculate the total rate in both cases and see what the policy obtained from Q-learning has any advantage over the baseline policy. 
 The baseline policy is just to "order up to policy", which simply means you look at hand inventory and the on-order inventory and "order up to "meet the capacity of the inventory. We can write simple code to write this policy in Python format here:
@@ -310,7 +304,7 @@ The plot above shows the total cost incurred in running the inventory when we fo
 
 ## Code in Github
 
-The full code for the this blog can be found in the Github repository [here]().
+The full code for the this blog can be found in the Github repository [here](https://github.com/Peymankor/medium_blogs/blob/main/2024/08-Aug/RL-Inventory/main.py).
 
 ## Summary and Main Takeaways
 
