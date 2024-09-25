@@ -11,7 +11,7 @@ print_background: false
 
 # Optimize Your Inventory Management with Reinforcement Learning: Hands-on Python Tutorial
 
-A complete guide on how to use reinforcement earning (Q-Learning method) for inventory management with hands-on Python code
+A complete guide on how to use reinforcement learning (Q-Learning method) for inventory management with hands-on Python code
 
 ## Inventory Management - What Problem Are We Solving?
 
@@ -37,7 +37,6 @@ Uncertainty in this problem arises from the random demand for bikes each day. Yo
 **Decisions**: How many items to order every day?
 As the bike shop owner, you face a recurring decision every day at 6 PM: How many bikes should you order from the supplier? Your decision needs to account for both the current state of your inventory (α,β) and also the uncertainty in customer demand for the following day.
 
-
 Here, this is overview of how inventory management is divided into different steps. A typical 24-hour cycle looks for managing your bike shop's inventory is as follows:
 
 6 PM: Observe the current state St:(α,β) of your inventory. (**State**)
@@ -49,6 +48,23 @@ Here, this is overview of how inventory management is divided into different ste
 
 A graphical representation of the inventory management process flow is shown below:
 ![Inventory Management Process Flow](./Img/processflow.png)
+
+## What is Reinforcement Learning?
+
+Reinforcement Learning (RL) is a machine learning paradigm that focuses on learning how to make sequences of decisions to maximize a cumulative reward. It is inspired by how humans and animals learn through trial and error. In the context of inventory management, RL can be used to learn the optimal ordering policy that minimizes the total cost of inventory management.
+The key components of Reinforcement Learning are:
+
+**Agent**: The decision-maker or learner that interacts with the environment.
+**Environment**: The external system with which the agent interacts. In this case, the environment is the bike shop and the random customer demand.
+**State**: The current situation or snapshot of the environment.
+**Action**: The decision or choice made by the agent.
+**Reward**: The feedback signal that tells the agent how well it's doing.
+
+The goal of the agent is to learn the optimal policy, which is a mapping from states to actions that maximizes the cumulative reward over time. In the context of inventory management, the policy tells the agent how many bikes to order each day based on the current inventory status and the uncertainty in customer demand.
+
+**Q-Learning**: A Model-Free Reinforcement Learning Algorithm
+Q-learning is a model-free reinforcement learning algorithm that learns the optimal action-selection policy for any given state. Unlike the DP approach, which requires a complete model of the environment, Q-learning learns directly from the interaction with the environment (here uncertainty and reward it gets) by updating a Q-table.
+
 
 ## Implementing Q-Learning for Inventory Optimization Problem
 
@@ -74,8 +90,6 @@ beta is the number of items on order (on-order inventory).
 Actions are possible inventory order quantities that can be taken in each state.
 For each state (alpha, beta), the possible actions depend on how much space is left in the inventory ( remaining capacity = Inventory Capacity - (alpha + beta)). The restriction is that the number of items ordered cannot exceed the remaining capacity of the inventory.
 
-Q-values (Q[state][action]) are initialized with small random values to encourage exploration.
-
 The schematic design of Q value is visualized as below:
 
 ![Q-Value Initialization](./Img/qschematics.png)
@@ -93,6 +107,8 @@ def initialize_Q(self):
             Q[state][action] = np.random.uniform(0, 1)  # Small random values
     return Q
 ```
+
+As teh above code shows, Q-values (Q[state][action]) are initialized with small random values to encourage exploration.
 
 ### The Q-Learning Algorithm
 
@@ -141,10 +157,10 @@ init_inv = alpha + beta
 demand = np.random.poisson(self.poisson_lambda)
 ```
 
-Note: Poisson distribution is used to model the demand, which is a common choice for modeling random events like customer arrivals. However, we are using Q-learning approach , meaning that is is possible that we can train the model with historical demand data or live interacting with environment. In its core, reinforcement learning is about learning from the data, and it does not require prior knowledge of model.
+Note: Poisson distribution is used to model the demand, which is a common choice for modeling random events like customer arrivals. However, we can either train the model with historical demand data or live interaction with environment in real time. In its core, reinforcement learning is about learning from the data, and it does not require prior knowledge of model.
 
 Now, the "next alpha" which is in-hand inventory can be written as max(0,init_inv-demand) . What that means is that if demand is more than initial inventory, then the new alpha would be zero, if not, init_inv-demand.
-The cost comes in two parts. The **holding cost**: all the bike in store multiplied by the unit cost of holding cost. Then, we have another cost, which is **stockout cost**. It is a cost that we need to pay for the cases of missed demand. These two parts form the "reward" which we try to maximize using reinforcement learning method.( a better way to put is we want to minimize the cost, so we maximize the reward).
+The cost comes in two parts. The **holding cost**: is calculated by multiplying the number of bikes in the store by the per-unit holding cost. Then, we have another cost, which is **stockout cost**. It is a cost that we need to pay for the cases of missed demand. These two parts form the "reward" which we try to maximize using reinforcement learning method.( a better way to put is we want to minimize the cost, so we maximize the reward).
 
 ```python
 new_alpha = max(0, init_inv - demand)
@@ -178,7 +194,7 @@ def choose_action(self, state):
 
 ### Training RL Agent
 
-The traning of the RL agent is done by the "train" function, and it is follow as: First, we need to initialize the Q (empty dictionary structure). Then, experinces is collected in each batch (self.batch.append((state, action, reward, next_state))), and the Q table is updated at the end of each batch (self.update_Q(self.batch)).
+The training of the RL agent is done by the "train" function, and it is follow as: First, we need to initialize the Q (empty dictionary structure). Then, experinces is collected in each batch (self.batch.append((state, action, reward, next_state))), and the Q table is updated at the end of each batch (self.update_Q(self.batch)).
 The number of episodes is limited to "max_actions_per_episode" in each batch. The number of episodes is the number of times the agent interacts with the environment to learn the optimal policy.
 
 Each episode starts with a randomly assigned state, and while the number of actions is lower than max_actions_per_episode, the collecting data for that batch continues.
@@ -207,7 +223,7 @@ def train(self):
 
 ## Example Case and Results
 
-This is example case hon how to pull together all above codes, and see how the Q-learning agent learns the optimal policy for inventory management.Here, user_capicty (capacity of storage) is 10, which is the total number of items that inventory can hold (capacity). Then, this position_lambda is the lambda term in the demand distribution, which has a value of 4. Holding costs is 8, which is the cost of holding an item in inventory overnight, and stockout cost, which is the cost of missed demand (assume that the item had a customer that day and the price of the item was, but you did not have the item in your inventory) is 10. gamma value lower than one is needed in the equation to discount the future reward (0.9), where alpha (learning rate ) is 0.1. The epsilon term is the term control exploration-exploitation dilemma. The episodes are 1000, and each batch consists of 1000 (max actions per episode).
+This is example case is on how to pull together all above codes, and see how the Q-learning agent learns the optimal policy for inventory management.Here, *user_capicty* (capacity of storage) is 10, which is the total number of items that inventory can hold (capacity). Then,the *poisson_lambda* is the lambda term in the demand distribution, which has a value of 4. Holding costs is 8, which is the cost of holding an item in inventory overnight, and stockout cost, which is the cost of missed demand (assume that the item had a customer that day and the price of the item was, but you did not have the item in your inventory) is 10. *gamma* value lower than one is needed in the equation to discount the future reward (0.9), where *alpha* (learning rate ) is 0.1. The *epsilon* term is the term control exploration-exploitation dilemma. The episodes are 1000, and each batch consists of 1000 (max actions per episode).
 
 ```python
 # Example usage:
@@ -239,7 +255,7 @@ optimal_policy = ql.get_optimal_policy()
 
 **Results**
 
-Now that we have the optimum policy found from the Q-learning method, we can visualize the results and see what they look like. The axis states, which is a tuple of (alpha, beta), and the y-axis is the "optimum" order.
+Now that we have the policy found from the Q-learning method, we can visualize the results and see what they look like. The x-axis is states, which is a tuple of (alpha, beta), and the y-axis is the "Number of Order" found from Q-learning at each state.
 
 ![Optimum Policy](./Fig/qlearningpolicy.png)
 
@@ -248,8 +264,8 @@ Couples of learning can be done by looking at the plot. First, as we go toward t
 
 **Compare the Policy to Base Line**
 
-Now that we used Q-learning to find the optimal policy (how many orders are given to the state (state)) , now we want to compare it to the baseline policy and calculate the total rate in both cases and see what the policy obtained from Q-learning has any advantage over the baseline policy. 
-The baseline policy is just to "order up to policy", which simply means you look at hand inventory and the on-order inventory and "order up to "meet the capacity of the inventory. We can write simple code to write this policy in Python format here:
+Now that we used Q-learning to find the policy (how many items to order given state) , now we can compare it to the baseline policy.
+The baseline policy is just to "order up to policy", which simply means you look at on-hand inventory and the on-order inventory and order up to "meet the capacity of the inventory". We can write simple code to write this policy in Python format here:
 
 ```python
 # Create a simple policy
@@ -260,12 +276,16 @@ def order_up_to_policy(state, user_capacity, target_level):
     return min(max_possible_order, desired_order)
 ```
 
-In the code, the target_level is the Desired value we want to order for inventory. If target_level = user_capacity, then we are filling just to fulfill the inventory.
+In the code, the target_level is the desired value we want to order for inventory. If target_level = user_capacity, then we are filling just to fulfill the inventory.
 First, we can compare the policies of these different methods. For each state, what will be the "number of orders" if we follow the simple policy and the one from the Q-learning policy? In the figure below, we plotted the comparison of two policies.
 
 ![Comparison of Policies](./Fig/plot_comp.png)
 
-The simple policy is just to order so that it fulfill the inventory, where the Q-learning policy order is often lower than the simple policy odre. This can be attributed to the fact that "poisson_lambda" here is 4, meaning the demand is much lower than the capacity of the inventory=10, therefore it is not optimal to order "high number of bycules" as it high cost of "holding cost.
+The simple policy is just to order so that it fulfill the inventory, where the Q-learning policy order is often lower than the simple policy order. 
+
+**This can be attributed to the fact that "poisson_lambda" here is 4, meaning the demand is much lower than the capacity of the inventory=10, therefore it is not optimal to order "high number of bicycle" as it high cost of "holding cost.**
+
+
 We can also compare the total cumulative rewards you can get when you apply both policies. To do that, we can use the test policy function of  "QLearningInventory" which it was especially designed to to evaluate policies:
 
 ```python
@@ -295,28 +315,28 @@ def test_policy(self, policy, episodes):
         return total_reward
 ```
 
-The way the function works is it starts randomly with a new state (state = (alpha_0, beta_0); then for that state, you get action (number of order) for that policy from policy, you act and see the reward, and next state, and the process continues as total number of episodes, while you collect total reward.
+The way the function works is it starts randomly with a new state (state = (alpha_0, beta_0); then for that state, you get action (number of order) for that state from policy, you act and see the reward, and next state, and the process continues as total number of episodes, while you collect total reward.
 
 
 ![Comparison of Policies](./Fig/plot_comp_rewards.png)
 
-The plot above shows the total cost incurred in running the inventory when we follow the "Q-Learning" and "Simple Policy". Note that here, since the "reward" that we want to maximize is the cost of running inventory, and in the code, we want to minimize the total cost. Therefore, in the plot, we added Ctotal cost = -total reward. Running the Q-leaning policy will lead to lower costs compared to the line policy, which is a simple one.
+The plot above compares the total cost of managing inventory when we follow the "Q-Learning" and "Simple Policy". The aim is to mimimize the cost of running inventory. Since the 'reward' in our model represents this cost, we added total cost = -total reward. Running the inventory with Q-Learning policy will lead to lower costs compared to the simple policy.
 
 ## Code in Github
 
-The full code for the this blog can be found in the Github repository [here](https://github.com/Peymankor/medium_blogs/blob/main/2024/08-Aug/RL-Inventory/main.py).
+The full code for the this blog can be found in the Github repository [Here](https://github.com/Peymankor/medium_blogs/blob/main/2024/08-Aug/RL-Inventory/main.py).
 
 ## Summary and Main Takeaways
 
-In this post, we worked on how Reinforcement learning (Q-Learning Specifically) can be used to optimize inventory management. We framed the problems as sequential decision making, and we were able to develop a Q-learning algorithm that learns the optimal ordering policy through interaction with the environment. Here, the environment was the "random" demand of the customers (buyers of bikes), and the state was the current inventory status (alpha, beta). The Q-learning algorithm was able to learn the optimal policy that minimizes the total cost of inventory management.
+In this post, we worked on how Reinforcement learning (Q-Learning Specifically) can be used to optimize inventory management. We framed the problems as sequential decision making, and we were able to develop a Q-learning algorithm that learns the optimal ordering policy through interaction with the environment (uncertainly). Here, the environment was the "random" demand of the customers (buyers of bikes), and the state was the current inventory status (alpha, beta). The Q-learning algorithm was able to learn the optimal policy that minimizes the total cost of inventory management.
 
-### Main Takeaways
+**Main Takeaways**
 
 1. **Sequential Decision-Making**: Inventory management can be effectively framed as a sequential decision-making problem, where today's decisions impact future outcomes.
 2. **Q-Learning**: A model-free reinforcement learning algorithm, Q-learning, can be used to find the optimal inventory policy without requiring a complete model of the environment.
 3. **State Representation**: The state in inventory management is represented by the current on-hand inventory and on-order inventory state = ($\alpha , \beta$).
 4. **Cost Reduction**: We can see that Q-learning policy leads to lower costs compared to the simple policy of ordering up to the capacity.
-5. **Scalability**: The Q-learning approach can be scaled to more complex inventory systems and other domains requiring sequential decision-making.
+5. **Flexibility**: The Q-learning approach is quite flexible and can be applied to the case of we have past data of demand, or we can interact with the environment to learn the optimal policy.
 6. **Data-Driven Decisions**: As we showed, the Reinforcement learning approach does not require any prior knowledge on the model of environment , as it is learning from the data.
 
 ## References
